@@ -124,6 +124,8 @@ int main(void)
         std::cout << "GLEW nije mogao da se ucita! :'(\n";
         return 3;
     }
+
+    //mapa za cuvanje tekstura
     std::map<char, Character> Characters;
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -142,6 +144,7 @@ int main(void)
         return -1;
     }
 
+    //48 piksela svaki objekat pa posle scalujemo
     FT_Set_Pixel_Sizes(face, 0, 48);
 
     unsigned int textures[128];
@@ -387,7 +390,7 @@ int main(void)
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glm::mat4 projection = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f);            
+    glm::mat4 projection = glm::ortho(0.0f, (float) wWidth, 0.0f,(float) wHeight);
     glUseProgram(textShader);
     int position = glGetUniformLocation(textShader, "position");
     glUniformMatrix4fv(glGetUniformLocation(textShader, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
@@ -552,13 +555,13 @@ int main(void)
         glActiveTexture(GL_TEXTURE0);
         glBindVertexArray(textVAO);
 
-        float scale = 0.25f;
+        float scale = 0.3f;
         float x = 50.0f;
-        float y_helicopter = 100.0f;
-        float y_current_helicopters = 80.0f;
-        float y_rocket = 60.0f;
-        float y_target = 40.0f;     
-        float y_name = 20.0f;
+        float y_helicopter = 150.0f;
+        float y_current_helicopters = 120.0f;
+        float y_rocket = 90.0f;
+        float y_target = 60.0f;     
+        float y_name = 30.0f;
         std::string text_helicopter = "BROJ OBORENIH HELIKOPTERA :" + std::to_string(numberDestroyed);
         std::string text_current_helicopters = "BROJ HELIKOPTERA U VAZDUHU :" + std::to_string(5 - numberDestroyed - numberTouched);
         std::string text_rocket = "BROJ PREOSTALIH RAKETA :" + std::to_string(numRocket);
@@ -771,8 +774,6 @@ int main(void)
                     std::exit(EXIT_FAILURE);
                 }
             }
-
-
         }
 
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -847,7 +848,6 @@ unsigned int compileShader(GLenum type, const char* source)
 }
 unsigned int createShader(const char* vsSource, const char* fsSource)
 {
-    
     unsigned int program;
     unsigned int vertexShader;
     unsigned int fragmentShader;
@@ -857,7 +857,6 @@ unsigned int createShader(const char* vsSource, const char* fsSource)
     vertexShader = compileShader(GL_VERTEX_SHADER, vsSource);
     fragmentShader = compileShader(GL_FRAGMENT_SHADER, fsSource);
 
-    
     glAttachShader(program, vertexShader);
     glAttachShader(program, fragmentShader);
 
@@ -943,8 +942,6 @@ static void updateCircleData(float* circle, float r, float dim1, float dim2, int
         yellowY = dim2;
         dim1 = 0;
         dim2 = 0;
-
-  
     }
     else {
         if (isHelicopter) {
@@ -1163,10 +1160,10 @@ void drawText(std::map<char, Character> Characters,unsigned int shader,float dis
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(textVAO);
 
-    float scale = 0.2f;
+    float scale = 0.3f;
     float x, y;
     rocket[indexRocket].getPosition(x, y);
-    float textX= ((x -yellowX+blueX +  1.0f) / 2.0f) * wWidth ;
+    float textX= ((x +  1.0f) / 2.0f) * wWidth + 20.0f;
     float textY = ((y + 1.0f) / 2.0f) * wHeight ;
 
     distance = std::round(distance * 100000.0) / 100.0;
