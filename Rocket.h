@@ -10,7 +10,8 @@ private:
     float x;
     float y;
     bool isSelected;
-    int hasTarget;
+    int target;
+    bool fly;
 
 public:
     // Konstruktori
@@ -21,13 +22,15 @@ public:
     void setName(const std::string& name);
     void setPosition(float x, float y);
     void setSelected(bool selected); // Setter za isSelected
-    void setHasTarget(int hasTarget);
+    void setTarget(int target);
+    void setFly(bool fly);
 
     // Getteri
     std::string getName() const;
     void getPosition(float& xOut, float& yOut) const;
     bool getSelected() const; // Getter za isSelected
-    int getHasTarget() const;
+    int getTarget() const;
+    bool getFly() const;
 
     // Metoda za ispis
     void printInfo() const;

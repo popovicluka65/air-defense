@@ -78,7 +78,6 @@ int indexRocket = 0;
 float rocketCircle[10][(CRES + 2) * 2];
 bool createdHelicopters = false;
 int numberDestroyed = 0,numberTouched = 0, numRocket = 10;
-bool spacePressed[10];
 unsigned int textVAO, textVBO;
 //stavio sam 3 put radi lakse demonstracije
 float helicopterSpeed = 0.005f;
@@ -360,8 +359,6 @@ int main(void)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-
-    
     glGenVertexArrays(1, &textVAO);
     glGenBuffers(1, &textVBO);
     glBindVertexArray(textVAO);
@@ -372,8 +369,6 @@ int main(void)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    
-   
     createHelicopters(0.1f);
 
     for (int i = 0; i < 5; i++) {
@@ -398,7 +393,6 @@ int main(void)
     //std::chrono::duration<double, std::milli> sleep_duration(1000.0 / 60.0);
     while (!glfwWindowShouldClose(window))
     {
-
         auto fpsStartTime = std::chrono::high_resolution_clock::now();
  
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -422,7 +416,6 @@ int main(void)
         glActiveTexture(GL_TEXTURE0); //tekstura koja se bind-uje nakon ovoga ce se koristiti sa SAMPLER2D uniformom u sejderu koja odgovara njenom indeksu
         glBindTexture(GL_TEXTURE_2D, checkerTexture);
 
-
         glClearColor(0.5, 0.5, 0.5, 1.0);
 
         if (isShowedMap)
@@ -443,16 +436,9 @@ int main(void)
         glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(blueCircle) / (2 * sizeof(float)));
 
         // Drugi objekat (žuti krug)
-
-        
-
-      
         glBindVertexArray(circleVAO[1]);
         if (isBlueLoc != -1)
             glUniform1i(isBlueLoc, 0);
-
-       
-        
 
         glUniform2f(translationLoc, 0.0f, 0.0f); // Primer translacije za žuti krug
         glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(yellowCircle) / (2 * sizeof(float)));
@@ -488,15 +474,31 @@ int main(void)
                 float greenIntensity = 1- pulseFactor; 
                 float blueIntensity = 1-pulseFactor;
 
+                //neka bude ljubicasti ako je selektovan
+                if (helicopters[i].getSelected()) {
+                    "UDJE OVDE";
+                    greenIntensity = 0 ;
+                    blueIntensity = 1;
+                }
+
+                //ako je space bio da nastavi da pulsira
+                for (int k = 0; k < indexRocket; k++) {
+                    if (rocket[k].getTarget() == i) {
+                        greenIntensity = 1 - pulseFactor;
+                        blueIntensity = 1 - pulseFactor;
+                    }
+                }
+
+
                 GLint translationLoc = glGetUniformLocation(helicopterShader, "uTranslation");
                 glUniform2f(translationLoc, x-yellowX, y-yellowY);
                 GLint colorLoc = glGetUniformLocation(helicopterShader, "color");
                 glUniform3f(colorLoc, redIntensity, greenIntensity, blueIntensity);
 
+                
                 if (distance > 0.05f && !destroyedHel[i]) {
                     glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(helicopterCircle[i]) / (2 * sizeof(float)));
-                }
-                
+                }  
             }
             moveHelicoptersToTarget(helicopterSpeed, window);
         }
@@ -506,27 +508,39 @@ int main(void)
                 double currentTime = glfwGetTime(); 
                 if (currentTime - lastSpacePressTime >= 0.5) { 
                     lastSpacePressTime = currentTime; 
-                    spacePressed[indexRocket] = true;
+
+                    rocket[indexRocket].setFly(true);
+
+                    for (int i = 0; i < 5; i++) {
+                        //dodati i NEMA RAKETU DODELJENU
+                        if (helicopters[i].getSelected()) {
+                            rocket[indexRocket].setTarget(i);
+                            break;
+                        }
+                    }
                     indexRocket++;
+ 
+                    //dodao JA 
+                   
                     //ovde bi trebalo ali trenutno je kod misa
                     //numRocket--;
                 }
             }
         }
 
-        for (int i = 0; i < 5; i++) {
-            if (helicopters[i].getSelected()) {
-                if (spacePressed[indexRocket-1]) {
-                    if (!destroyedHel[i]) {
-                        float x, y;
-                        helicopters[i].getPosition(x, y);
-                        rocket[indexRocket].setSelected(true);
-
-                        moveRocket(x, y, rocketSpeed, window, i, Characters,textShader);
-                        drawRocket(Characters);
-
-                    }
+        for (int i = 0; i < indexRocket; i++) {
+            if (rocket[i].getFly()) {
+                std::cout << std::to_string(rocket[i].getTarget())<< std::endl;
+                int index = rocket[i].getTarget();
+                float x, y;
+                helicopters[index].getPosition(x, y);
+                if (!destroyedHel[index]) {
+                    //zaboravio sam cemu ovo sluzi
+                    rocket[indexRocket].setSelected(true);
+                    moveRocket(x, y, rocketSpeed, window, index, Characters, textShader);
+                    drawRocket(Characters);
                 }
+
             }
         }
 
@@ -1090,22 +1104,22 @@ void moveRocket(float targetX, float targetY, float speed, GLFWwindow* windrdow,
         if (distance < 0.05f) {
 
             //75% sanse da se unisti
-            int probability = rand() % 4;
-            std::cout << "PROBABILITY" << std::to_string(probability) << std::endl;
-            if (probability == 0 || probability == 1 || probability == 2) {
+            //int probability = rand() % 4;
+            //std::cout << "PROBABILITY" << std::to_string(probability) << std::endl;
+            //if (probability == 0 || probability == 1 || probability == 2) {
                 destroyedHel[number] = true;
                 numberDestroyed++;
                 rocket[indexRocket].setSelected(false);
                 rocket[indexRocket].setPosition(blueX, blueY);
                 helicopters[number].setPosition(10000.0f, 10000.0f);
                 helicopters[number].setSelected(false);
-            }
+            /*}
             else {
                 destroyedHel[number] = false;
                 rocket[indexRocket].setPosition(blueX, blueY);
                 helicopters[number].setSelected(false);
                 rocket[indexRocket].setSelected(false);
-            }
+            }*/
         }
 
         drawText(Characters, shader, distance);
