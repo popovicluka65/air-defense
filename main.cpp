@@ -65,7 +65,6 @@ unsigned int helicoptersVAO[5], helicoptersVBO[5];
 unsigned int basicShader;
 unsigned int rocketShader;
 std::set<int> helicopterTarget;
-bool clicked = false;
 bool selectMode = true;
 double lastSpacePressTime = 0.0;
 const int TARGET_FPS = 60;
@@ -79,6 +78,7 @@ float rocketCircle[10][(CRES + 2) * 2];
 bool createdHelicopters = false;
 int numberDestroyed = 0,numberTouched = 0, numRocket = 10;
 unsigned int textVAO, textVBO;
+
 //stavio sam 3 put radi lakse demonstracije
 //float helicopterSpeed = 0.005f;
 //float rocketSpeed = 3 * helicopterSpeed;
@@ -86,6 +86,8 @@ unsigned int textVAO, textVBO;
 float helicopterSpeed = 0.001f;
 float rocketSpeed = 6 * helicopterSpeed;
 int indexToDraw[10];
+bool waited3s = false,waitedMessage = false;
+double startTimeHelicopters, startTimeMessage;
 
 int main(void)
 {
@@ -446,58 +448,70 @@ int main(void)
         float centerX = 0; 
         float centerY = 0;
         
-        if (isYellowCircleSet) {
+        if (!waited3s) {
+            
+            if(glfwGetTime() - startTimeHelicopters >= 3.0) {
+                waited3s = true;
+            }
+        }
 
-            glUseProgram(helicopterShader);
-            for (int i = 0; i < 5; i++) {
-                float x, y;
-                helicopters[i].getPosition(x, y);
-                float dirX =yellowX - x ;
-                float dirY = yellowY- y ;
+        if (waited3s) {
+            if (isYellowCircleSet) {
 
-                float distance = sqrt(dirX * dirX + dirY * dirY);
+                glUseProgram(helicopterShader);
+                for (int i = 0; i < 5; i++) {
+                    float x, y;
+                    helicopters[i].getPosition(x, y);
+                    float dirX = yellowX - x;
+                    float dirY = yellowY - y;
 
-                if (distance > 0.0f) { 
-                    dirX /= distance;
-                    dirY /= distance;
-                }
+                    float distance = sqrt(dirX * dirX + dirY * dirY);
 
-                float speed = 0.01f;
-                x += dirX * speed;
-                y += dirY * speed;
+                    if (distance > 0.0f) {
+                        dirX /= distance;
+                        dirY /= distance;
+                    }
 
-                float pulseSpeed = 10.0f + 8.0f * (1.0f - distance);
-                float pulseFactor = 0.5f + 0.5f * sin(8*pulseSpeed);
+                    float speed = 0.01f;
+                    x += dirX * speed;
+                    y += dirY * speed;
 
-                float redIntensity = 1; 
-                float greenIntensity = 1- pulseFactor; 
-                float blueIntensity = 1-pulseFactor;
+                    float pulseSpeed = 10.0f + 8.0f * (1.0f - distance);
+                    float pulseFactor = 0.5f + 0.5f * sin(8 * pulseSpeed);
 
-                //neka bude ljubicasti ako je selektovan
-                if (helicopters[i].getSelected()) {                  
-                    greenIntensity = 0 ;
-                    blueIntensity = 1;
-                }
+                    float redIntensity = 1;
+                    float greenIntensity = 1 - pulseFactor;
+                    float blueIntensity = 1 - pulseFactor;
 
-                for (int k = 0; k < indexRocket; k++) {
-                    if (rocket[k].getTarget() == i) {
-                        greenIntensity = 1 - pulseFactor;
-                        blueIntensity = 1 - pulseFactor;
+                    //neka bude ljubicasti ako je selektovan
+                    if (helicopters[i].getSelected()) {
+                        greenIntensity = 0;
+                        blueIntensity = 1;
+                    }
+
+                    for (int k = 0; k < indexRocket; k++) {
+                        if (rocket[k].getTarget() == i) {
+                            greenIntensity = 1 - pulseFactor;
+                            blueIntensity = 1 - pulseFactor;
+                        }
+                    }
+
+
+                    GLint translationLoc = glGetUniformLocation(helicopterShader, "uTranslation");
+                    glUniform2f(translationLoc, x - yellowX, y - yellowY);
+                    GLint colorLoc = glGetUniformLocation(helicopterShader, "color");
+                    glUniform3f(colorLoc, redIntensity, greenIntensity, blueIntensity);
+
+                    if (distance > 0.05f && !destroyedHel[i]) {
+                        glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(helicopterCircle[i]) / (2 * sizeof(float)));
                     }
                 }
-
-
-                GLint translationLoc = glGetUniformLocation(helicopterShader, "uTranslation");
-                glUniform2f(translationLoc, x-yellowX, y-yellowY);
-                GLint colorLoc = glGetUniformLocation(helicopterShader, "color");
-                glUniform3f(colorLoc, redIntensity, greenIntensity, blueIntensity);
-                
-                if (distance > 0.05f && !destroyedHel[i]) {
-                    glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(helicopterCircle[i]) / (2 * sizeof(float)));
-                }  
+                moveHelicoptersToTarget(helicopterSpeed, window);
             }
-            moveHelicoptersToTarget(helicopterSpeed, window);
         }
+
+
+
 
         if (isBlueCircleSet && isYellowCircleSet) {
             if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
@@ -714,20 +728,51 @@ int main(void)
         }
 
         if (numberDestroyed == 5) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
             glUseProgram(textureShader);  
             glBindVertexArray(VAO1);               
             glActiveTexture(GL_TEXTURE0);             
             glBindTexture(GL_TEXTURE_2D, checkerTexture1); 
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
    
-            //std::exit(EXIT_FAILURE);
+            if (!waitedMessage) {
+                startTimeMessage = glfwGetTime();
+                waitedMessage = true;
+            }
+
+            if (waitedMessage) {
+                double currentTime = glfwGetTime();
+                if (currentTime - startTimeMessage >= 3.0) {
+                    waitedMessage = false;
+                    startTimeMessage = -1.0;
+                    std::exit(EXIT_FAILURE);
+                }
+            }
+
         }
         else if (numberTouched >= 2) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
             glUseProgram(textureShader);    
             glBindVertexArray(VAO2);       
             glActiveTexture(GL_TEXTURE0);  
             glBindTexture(GL_TEXTURE_2D, checkerTexture2); 
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+            if (!waitedMessage) {
+                startTimeMessage = glfwGetTime();
+                waitedMessage = true;
+            }
+
+            if (waitedMessage) {
+                double currentTime = glfwGetTime();
+                if (currentTime - startTimeMessage >= 3.0) {
+                    waitedMessage = false; 
+                    startTimeMessage = -1.0; 
+                    std::exit(EXIT_FAILURE);
+                }
+            }
+
+
         }
 
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -958,8 +1003,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             else if (!isYellowCircleSet) {
                 updateCircleData(yellowCircle, 0.05f, dim1, dim2, -1,false);
                 isYellowCircleSet = true;
-                clicked = true;
                 selectMode = false;  
+                startTimeHelicopters = glfwGetTime();
             }
         }
         else {
@@ -1121,7 +1166,7 @@ void drawText(std::map<char, Character> Characters,unsigned int shader,float dis
     float scale = 0.2f;
     float x, y;
     rocket[indexRocket].getPosition(x, y);
-    float textX= ((x  +  1.0f) / 2.0f) * wWidth ;
+    float textX= ((x -yellowX+blueX +  1.0f) / 2.0f) * wWidth ;
     float textY = ((y + 1.0f) / 2.0f) * wHeight ;
 
     distance = std::round(distance * 100000.0) / 100.0;
