@@ -1,0 +1,4 @@
+C:\Users\NTP400-XXXXX\Desktop\RG2024\Teksture\x64\Debug\glew32.dll
+C:\Users\NITRO\Desktop\Grafika MAERIJALI\V4 - tekstura\RG Teksture\Teksture\x64\Debug\glew32.dll
+C:\Users\NITRO\Desktop\air-defense-2d\x64\Debug\glew32.dll
+C:\Users\NITRO\Desktop\NOVA GRAFIKA\air-defense-2d\x64\Debug\glew32.dll
