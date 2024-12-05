@@ -46,7 +46,7 @@ void createRocket();
 void initializeRandomSeed();
 float generateRandomNumber(float min, float max);
 void moveHelicoptersToTarget(float speed, GLFWwindow* window);
-void drawRocket(std::map<char, Character> Characters);
+void drawRocket(std::map<char, Character> Characters, int i);
 void moveRocket(float targetX, float targetY, float speed, GLFWwindow* window, int number, std::map<char, Character> Characters, unsigned int shader);
 void drawText(std::map<char, Character> Characters, unsigned int shader,float distance);
 
@@ -80,12 +80,12 @@ bool createdHelicopters = false;
 int numberDestroyed = 0,numberTouched = 0, numRocket = 10;
 unsigned int textVAO, textVBO;
 //stavio sam 3 put radi lakse demonstracije
-float helicopterSpeed = 0.005f;
-float rocketSpeed = 3 * helicopterSpeed;
+//float helicopterSpeed = 0.005f;
+//float rocketSpeed = 3 * helicopterSpeed;
 
-//float helicopterSpeed = 0.001f;
-//float rocketSpeed = 100 * helicopterSpeed;
-
+float helicopterSpeed = 0.001f;
+float rocketSpeed = 6 * helicopterSpeed;
+int indexToDraw[10];
 
 int main(void)
 {
@@ -390,7 +390,6 @@ int main(void)
     int position = glGetUniformLocation(textShader, "position");
     glUniformMatrix4fv(glGetUniformLocation(textShader, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-    //std::chrono::duration<double, std::milli> sleep_duration(1000.0 / 60.0);
     while (!glfwWindowShouldClose(window))
     {
         auto fpsStartTime = std::chrono::high_resolution_clock::now();
@@ -475,13 +474,11 @@ int main(void)
                 float blueIntensity = 1-pulseFactor;
 
                 //neka bude ljubicasti ako je selektovan
-                if (helicopters[i].getSelected()) {
-                    "UDJE OVDE";
+                if (helicopters[i].getSelected()) {                  
                     greenIntensity = 0 ;
                     blueIntensity = 1;
                 }
 
-                //ako je space bio da nastavi da pulsira
                 for (int k = 0; k < indexRocket; k++) {
                     if (rocket[k].getTarget() == i) {
                         greenIntensity = 1 - pulseFactor;
@@ -494,7 +491,6 @@ int main(void)
                 glUniform2f(translationLoc, x-yellowX, y-yellowY);
                 GLint colorLoc = glGetUniformLocation(helicopterShader, "color");
                 glUniform3f(colorLoc, redIntensity, greenIntensity, blueIntensity);
-
                 
                 if (distance > 0.05f && !destroyedHel[i]) {
                     glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(helicopterCircle[i]) / (2 * sizeof(float)));
@@ -508,7 +504,7 @@ int main(void)
                 double currentTime = glfwGetTime(); 
                 if (currentTime - lastSpacePressTime >= 0.5) { 
                     lastSpacePressTime = currentTime; 
-
+                    //rocket[indexRocket].setPosition(blueX, blueY);
                     rocket[indexRocket].setFly(true);
 
                     for (int i = 0; i < 5; i++) {
@@ -518,19 +514,12 @@ int main(void)
                             break;
                         }
                     }
-                    indexRocket++;
- 
-                    //dodao JA 
-                   
-                    //ovde bi trebalo ali trenutno je kod misa
-                    //numRocket--;
-                }
-            }
-        }
+                    indexRocket++; 
+                   numRocket--;
+                }}}
 
         for (int i = 0; i < indexRocket; i++) {
             if (rocket[i].getFly()) {
-                std::cout << std::to_string(rocket[i].getTarget())<< std::endl;
                 int index = rocket[i].getTarget();
                 float x, y;
                 helicopters[index].getPosition(x, y);
@@ -538,12 +527,11 @@ int main(void)
                     //zaboravio sam cemu ovo sluzi
                     rocket[indexRocket].setSelected(true);
                     moveRocket(x, y, rocketSpeed, window, index, Characters, textShader);
-                    drawRocket(Characters);
+                    //drawRocket(Characters);
+                    drawRocket(Characters,i);
+
                 }
-
-            }
-        }
-
+            }}
 
         glUseProgram(textShader);
         glUniform3f(glGetUniformLocation(textShader, "textColor"), 0.0f, 0.0f, 0.0f);
@@ -732,7 +720,7 @@ int main(void)
             glBindTexture(GL_TEXTURE_2D, checkerTexture1); 
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
    
-            std::exit(EXIT_FAILURE);
+            //std::exit(EXIT_FAILURE);
         }
         else if (numberTouched >= 2) {
             glUseProgram(textureShader);    
@@ -747,7 +735,6 @@ int main(void)
         glUseProgram(0);
         glfwSwapBuffers(window);
         glfwPollEvents();
-  
 
         auto fpsEndTime = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = fpsEndTime - fpsStartTime;
@@ -952,8 +939,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 blueY = dim2;
                 updateCircleData(blueCircle, 0.1f, dim1, dim2, -2,false);
                 isBlueCircleSet = true;
-
-                std::cout << blueX << " " << blueY << std::endl;
                 createRocket();
 
                 for (int i = 0; i < 10; i++) {
@@ -975,24 +960,18 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 isYellowCircleSet = true;
                 clicked = true;
                 selectMode = false;  
-
-
             }
         }
         else {
             for (int i = 0; i < 5; i++) {
                 float x, y;
                 helicopters[i].getPosition(x, y);
-                float radius = 0.1f;
+                float radius = 0.05f;
 
-                if (isMouseInsideCircle(dim1, dim2, x, y, radius)) {
+                if (isMouseInsideCircle(dim1, dim2, x, y, radius)) 
                     helicopters[i].setSelected(true);
-                    numRocket--;
-                }
-           
-            }
-        }
-    }
+                
+            }}}
 }
 
 bool isMouseInsideCircle(float mouseX, float mouseY, float circleX, float circleY, float radius) {
@@ -1055,15 +1034,13 @@ void moveHelicoptersToTarget(float speed, GLFWwindow* window) {
         }
     }
 }
-void drawRocket(std::map<char, Character> Characters) {
+void drawRocket(std::map<char, Character> Characters, int i) {
 
-        //for (int i = 0; i <= indexRocket; i++) {
-        if (rocket[indexRocket].getSelected()) {
-            //glBindVertexArray(textVAO);
-            glBindVertexArray(rocketsVAO[indexRocket]);
-            glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(rocketCircle[indexRocket]) / (2 * sizeof(float)));
-        }
-
+        //for (int i = 0; i < indexRocket; i++) {
+        //if (rocket[indexRocket].getSelected()) {
+            glBindVertexArray(rocketsVAO[i]);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(rocketCircle[i]) / (2 * sizeof(float)));
+        //}
         //}
         glBindVertexArray(0);
     
@@ -1104,22 +1081,25 @@ void moveRocket(float targetX, float targetY, float speed, GLFWwindow* windrdow,
         if (distance < 0.05f) {
 
             //75% sanse da se unisti
-            //int probability = rand() % 4;
-            //std::cout << "PROBABILITY" << std::to_string(probability) << std::endl;
-            //if (probability == 0 || probability == 1 || probability == 2) {
+            int probability = rand() % 4;
+            std::cout << "PROBABILITY" << std::to_string(probability) << std::endl;
+            if (probability == 0 || probability == 1 || probability == 2) {
                 destroyedHel[number] = true;
                 numberDestroyed++;
-                rocket[indexRocket].setSelected(false);
-                rocket[indexRocket].setPosition(blueX, blueY);
+                rocket[indexRocket-1].setSelected(false);
+                rocket[indexRocket-1].setFly(false);
+                //rocket[indexRocket].setPosition(blueX, blueY);
                 helicopters[number].setPosition(10000.0f, 10000.0f);
                 helicopters[number].setSelected(false);
-            /*}
+
+            }
             else {
                 destroyedHel[number] = false;
-                rocket[indexRocket].setPosition(blueX, blueY);
+                //rocket[indexRocket].setPosition(blueX, blueY);
                 helicopters[number].setSelected(false);
-                rocket[indexRocket].setSelected(false);
-            }*/
+                rocket[indexRocket-1].setSelected(false);
+                rocket[indexRocket-1].setFly(false);
+            }
         }
 
         drawText(Characters, shader, distance);

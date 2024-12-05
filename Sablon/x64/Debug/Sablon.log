@@ -2,6 +2,6 @@
 C:\Users\NITRO\Desktop\air-defense\main.cpp(182,33): warning C4838: conversion from 'FT_Pos' to 'unsigned int' requires a narrowing conversion
 C:\Users\NITRO\Desktop\air-defense\main.cpp(201,15): warning C4305: 'initializing': truncation from 'double' to 'float'
 C:\Users\NITRO\Desktop\air-defense\main.cpp(202,16): warning C4305: 'initializing': truncation from 'double' to 'float'
-C:\Users\NITRO\Desktop\air-defense\main.cpp(893,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\NITRO\Desktop\air-defense\main.cpp(1147,48): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\NITRO\Desktop\air-defense\main.cpp(880,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\NITRO\Desktop\air-defense\main.cpp(1127,48): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   Sablon.vcxproj -> C:\Users\NITRO\Desktop\air-defense\x64\Debug\Sablon.exe

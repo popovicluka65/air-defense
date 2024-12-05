@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 
-Helicopter::Helicopter() : name(""), x(0.0f), y(0.0f), isSelected(false) {}
+Helicopter::Helicopter() : name(""), x(0.0f), y(0.0f), isSelected(false),hasRocket(false) {}
 
 Helicopter::Helicopter(const std::string& name, float x, float y)
     : name(name), x(x), y(y), isSelected(false) {}
@@ -20,6 +20,10 @@ void Helicopter::setSelected(bool selected) {
     this->isSelected = selected;
 }
 
+void Helicopter::setHasRocket(bool hasRocket) {
+    this->hasRocket = hasRocket;
+}
+
 std::string Helicopter::getName() const {
     return name;
 }
@@ -31,6 +35,10 @@ void Helicopter::getPosition(float& xOut, float& yOut) const {
 
 bool Helicopter::getSelected() const {
     return isSelected;
+}
+
+bool Helicopter::getHasRocket() const {
+    return hasRocket;
 }
 
 void Helicopter::printInfo() const {

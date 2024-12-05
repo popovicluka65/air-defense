@@ -11,6 +11,7 @@ private:
     float y;
     //neka za helikopter predstavlja da li je select a za rocket da li isShow treba
     bool isSelected; 
+    bool hasRocket;
 
 public:
     Helicopter();
@@ -20,11 +21,13 @@ public:
     void setName(const std::string& name);
     void setPosition(float x, float y);
     void setSelected(bool selected); // Setter za isSelected
+    void setHasRocket(bool hasRocket); // Setter za isSelected
 
     // Getteri
     std::string getName() const;
     void getPosition(float& xOut, float& yOut) const;
     bool getSelected() const; // Getter za isSelected
+    bool getHasRocket() const; // Getter za isSelected
 
     // Metoda za ispis
     void printInfo() const;
