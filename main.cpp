@@ -45,9 +45,9 @@ void createHelicopters(float r);
 void createRocket();
 void initializeRandomSeed();
 float generateRandomNumber(float min, float max);
-void moveHelicoptersToTarget(float speed, GLFWwindow* window);
+void moveHelicoptersToTarget(float speed);
 void drawRocket(std::map<char, Character> Characters, int i);
-void moveRocket(float targetX, float targetY, float speed, GLFWwindow* window, int number, std::map<char, Character> Characters, unsigned int shader);
+void moveRocket(float targetX, float targetY, float speed, int number, std::map<char, Character> Characters, unsigned int shader);
 void drawText(std::map<char, Character> Characters, unsigned int shader,float distance);
 
 unsigned int wWidth = 1000, wHeight = 1000;
@@ -85,7 +85,6 @@ unsigned int textVAO, textVBO;
 
 float helicopterSpeed = 0.001f;
 float rocketSpeed = 6 * helicopterSpeed;
-int indexToDraw[10];
 bool waited3s = false,waitedMessage = false;
 double startTimeHelicopters, startTimeMessage;
 
@@ -294,7 +293,7 @@ int main(void)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    //Tekstura
+    //Tekstura, kopirao sa vezbi
     unsigned checkerTexture = loadImageToTexture("res/map.png"); //Ucitavamo teksturu
     glBindTexture(GL_TEXTURE_2D, checkerTexture); //Podesavamo teksturu
     glGenerateMipmap(GL_TEXTURE_2D); //Generisemo mipmape 
@@ -509,21 +508,18 @@ int main(void)
                         glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(helicopterCircle[i]) / (2 * sizeof(float)));
                     }
                 }
-                moveHelicoptersToTarget(helicopterSpeed, window);
+                moveHelicoptersToTarget(helicopterSpeed);
             }
         }
-
-
-
 
         if (isBlueCircleSet && isYellowCircleSet) {
             if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
                 double currentTime = glfwGetTime(); 
-                if (currentTime - lastSpacePressTime >= 0.5) { 
+                if (currentTime - lastSpacePressTime >= 0.25) { 
                     lastSpacePressTime = currentTime; 
                     //rocket[indexRocket].setPosition(blueX, blueY);
                     rocket[indexRocket].setFly(true);
-
+                   
                     for (int i = 0; i < 5; i++) {
                         //dodati i NEMA RAKETU DODELJENU
                         if (helicopters[i].getSelected()) {
@@ -535,7 +531,7 @@ int main(void)
                    numRocket--;
                 }}}
 
-        for (int i = 0; i < indexRocket; i++) {
+        for (int i = 0; i <= indexRocket; i++) {
             if (rocket[i].getFly()) {
                 int index = rocket[i].getTarget();
                 float x, y;
@@ -543,10 +539,8 @@ int main(void)
                 if (!destroyedHel[index]) {
                     //zaboravio sam cemu ovo sluzi
                     rocket[indexRocket].setSelected(true);
-                    moveRocket(x, y, rocketSpeed, window, index, Characters, textShader);
-                    //drawRocket(Characters);
-                    drawRocket(Characters,i);
-
+                    moveRocket(x, y, rocketSpeed, index, Characters, textShader);
+                    drawRocket(Characters, i);
                 }
             }}
 
@@ -748,7 +742,7 @@ int main(void)
                 if (currentTime - startTimeMessage >= 3.0) {
                     waitedMessage = false;
                     startTimeMessage = -1.0;
-                    std::exit(EXIT_FAILURE);
+                    glfwSetWindowShouldClose(window, GL_TRUE);
                 }
             }
 
@@ -771,7 +765,7 @@ int main(void)
                 if (currentTime - startTimeMessage >= 3.0) {
                     waitedMessage = false; 
                     startTimeMessage = -1.0; 
-                    std::exit(EXIT_FAILURE);
+                    glfwSetWindowShouldClose(window, GL_TRUE);
                 }
             }
         }
@@ -993,9 +987,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                     glEnableVertexAttribArray(0);
                     glBindBuffer(GL_ARRAY_BUFFER, 0);
                     glBindVertexArray(0);
-                }
-                
-
+                } 
             }
             else if (!isYellowCircleSet) {
                 updateCircleData(yellowCircle, 0.05f, dim1, dim2, -1,false);
@@ -1052,7 +1044,7 @@ void createHelicopters(float r) {
     }
 }
 
-void moveHelicoptersToTarget(float speed, GLFWwindow* window) {
+void moveHelicoptersToTarget(float speed) {
     for (int i = 0; i < 5; i++) {
         float x, y;
         helicopters[i].getPosition(x, y);
@@ -1073,19 +1065,24 @@ void moveHelicoptersToTarget(float speed, GLFWwindow* window) {
         else {
             numberTouched++;
             helicopters[i].setPosition(99999.0f, 99999.0f);
+            helicopters[i].setSelected(false);
+            for (int j = 0; j <= indexRocket;j++) {
+                if (rocket[j].getFly() && rocket[j].getTarget() == i) {
+                    rocket[j].setFly(false);
+                    rocket[j].setPosition(blueX, blueY);
+                }
+            }
         }
     }
 }
 void drawRocket(std::map<char, Character> Characters, int i) {
 
-        //for (int i = 0; i < indexRocket; i++) {
-        //if (rocket[indexRocket].getSelected()) {
+        for (int i = 0; i <= 10; i++) {
+        if (rocket[i].getFly()) {
             glBindVertexArray(rocketsVAO[i]);
             glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(rocketCircle[i]) / (2 * sizeof(float)));
-        //}
-        //}
-        glBindVertexArray(0);
-    
+        }}
+        glBindVertexArray(0); 
 }
 
 void createRocket() {
@@ -1102,7 +1099,7 @@ void createRocket() {
     }
 }
 
-void moveRocket(float targetX, float targetY, float speed, GLFWwindow* windrdow,int number, std::map<char, Character> Characters,unsigned int shader) {
+void moveRocket(float targetX, float targetY, float speed,int number, std::map<char, Character> Characters,unsigned int shader) {
         float x, y;
         rocket[indexRocket].getPosition(x, y);
 
@@ -1133,7 +1130,6 @@ void moveRocket(float targetX, float targetY, float speed, GLFWwindow* windrdow,
                 //rocket[indexRocket].setPosition(blueX, blueY);
                 helicopters[number].setPosition(10000.0f, 10000.0f);
                 helicopters[number].setSelected(false);
-
             }
             else {
                 destroyedHel[number] = false;
@@ -1151,7 +1147,6 @@ void moveRocket(float targetX, float targetY, float speed, GLFWwindow* windrdow,
         if (translationLoc != -1) {
             glUniform2f(translationLoc, x - blueX, y - blueY);
         }
-
 }
 
 void drawText(std::map<char, Character> Characters,unsigned int shader,float distance){ 
